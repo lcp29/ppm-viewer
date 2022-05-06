@@ -349,6 +349,14 @@ long getFileSize(FILE *pf)
     return fileSize;
 }
 
+void decode(char *fileBuf, u8 *out, long fileSize)
+{
+    static const void (*decoders[6])(u8 *, char *, long) = {
+            decodeP1, decodeP2, decodeP3, decodeP4, decodeP5, decodeP6
+    };
+    decoders[fileType - 1](out, fileBuf, fileSize);
+}
+
 int main(int argc, char *argv[])
 {
     if (argc == 1)
@@ -381,7 +389,6 @@ int main(int argc, char *argv[])
 
     // get file size
     int width, height;
-    int beginIndex = 0;
     getMetaData(fileBuf, &width, &height, NULL, fileSize);
 
     // decode
@@ -392,11 +399,7 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    void (*decoders[6])(u8 *, char *, long) = {
-            decodeP1, decodeP2, decodeP3, decodeP4, decodeP5, decodeP6
-    };
-
-    decoders[fileType - 1](out, fileBuf, fileSize);
+    decode(fileBuf, out, fileSize);
 
     // display
     SDL_Init(SDL_INIT_VIDEO);
