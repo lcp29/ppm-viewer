@@ -2,12 +2,22 @@
 // Created by licha on 2022/5/4.
 //
 
+#ifdef __EMSCRIPTEN__
+
+#include <emscripten.h>
+#define KEEPALIVE EMSCRIPTEN_KEEPALIVE
+
+#else
+
 #include <SDL2/SDL.h>
+#define KEEPALIVE
+
+#endif
 #include <stdio.h>
 #include <string.h>
 #include <malloc.h>
-
-#define u8              unsigned char
+#include <ctype.h>
+#include <stdint.h>
 
 #define PNM_UNKNOWN     0
 #define PNM_P1          1
@@ -17,7 +27,8 @@
 #define PNM_P5          5
 #define PNM_P6          6
 
-int getPnmType(char *buf)
+
+KEEPALIVE int getPnmType(int8_t *buf)
 {
     if (buf[0] == 'P')
     {
@@ -27,12 +38,12 @@ int getPnmType(char *buf)
     return PNM_UNKNOWN;
 }
 
-int getMetaData(const char *file, int *width, int *height, int *maxv, int fileSize)
+KEEPALIVE int getMetaData(const int8_t *file, int *width, int *height, int *maxv, int fileSize)
 {
     int fi = 2;
-    char skippingComment = 0;
-    char numParsed = 0;
-    char parsingNumber = 0;
+    int8_t skippingComment = 0;
+    int8_t numParsed = 0;
+    int8_t parsingNumber = 0;
     int num = 0;
     while (fi < fileSize)
     {
@@ -67,7 +78,7 @@ int getMetaData(const char *file, int *width, int *height, int *maxv, int fileSi
             fi++;
             continue;
         }
-        if (!isdigit((u8) file[fi]))
+        if (!isdigit((uint8_t) file[fi]))
         {
             if (parsingNumber == 1)
             {
@@ -90,15 +101,15 @@ int getMetaData(const char *file, int *width, int *height, int *maxv, int fileSi
             fi++;
             continue;
         }
-        if (isdigit((u8) file[fi]))
+        if (isdigit((uint8_t) file[fi]))
         {
             if (parsingNumber)
             {
                 num *= 10;
-                num += (u8) file[fi] - '0';
+                num += (uint8_t) file[fi] - '0';
             } else
             {
-                num = (u8) file[fi] - '0';
+                num = (uint8_t) file[fi] - '0';
                 parsingNumber = 1;
             }
             fi++;
@@ -108,12 +119,12 @@ int getMetaData(const char *file, int *width, int *height, int *maxv, int fileSi
     return fi;
 }
 
-void decodeP1(u8 *out, char *file, long fileSize)
+KEEPALIVE void decodeP1(uint8_t *out, int8_t *file, long fileSize)
 {
     int width, height;
     int fi = getMetaData(file, &width, &height, NULL, fileSize);
     int oi = 0;
-    char jumpingComment = 0;
+    int8_t jumpingComment = 0;
     while (fi < fileSize && oi < width * height * 3)
     {
         if (file[fi] == '#')
@@ -153,15 +164,15 @@ void decodeP1(u8 *out, char *file, long fileSize)
     }
 }
 
-void decodeP2(u8 *out, char *file, long fileSize)
+KEEPALIVE void decodeP2(uint8_t *out, int8_t *file, long fileSize)
 {
     int width, height;
     int maxv;
     int fi = getMetaData(file, &width, &height, &maxv, fileSize);
     int oi = 0;
     int num = 0;
-    char jumpingComment = 0;
-    char numberPushed = 0;
+    int8_t jumpingComment = 0;
+    int8_t numberPushed = 0;
     while (fi < fileSize && oi < width * height * 3)
     {
         if (file[fi] == '#')
@@ -170,7 +181,7 @@ void decodeP2(u8 *out, char *file, long fileSize)
             fi++;
             if (numberPushed)
             {
-                u8 pixVal = (u8) ((float) num / (float) maxv * 255);
+                uint8_t pixVal = (uint8_t) ((float) num / (float) maxv * 255);
                 out[oi] = pixVal;
                 out[oi + 1] = pixVal;
                 out[oi + 2] = pixVal;
@@ -186,11 +197,11 @@ void decodeP2(u8 *out, char *file, long fileSize)
             fi++;
             continue;
         }
-        if (!isdigit((u8) file[fi]))
+        if (!isdigit((uint8_t) file[fi]))
         {
             if (numberPushed)
             {
-                u8 pixVal = (u8) ((float) num / (float) maxv * 255);
+                uint8_t pixVal = (uint8_t) ((float) num / (float) maxv * 255);
                 out[oi] = pixVal;
                 out[oi + 1] = pixVal;
                 out[oi + 2] = pixVal;
@@ -200,16 +211,16 @@ void decodeP2(u8 *out, char *file, long fileSize)
             fi++;
             continue;
         }
-        if (isdigit((u8) file[fi]))
+        if (isdigit((uint8_t) file[fi]))
         {
             if (!numberPushed)
             {
-                num = (u8) file[fi] - '0';
+                num = (uint8_t) file[fi] - '0';
                 numberPushed = 1;
             } else
             {
                 num *= 10;
-                num += (u8) file[fi] - '0';
+                num += (uint8_t) file[fi] - '0';
             }
             fi++;
             continue;
@@ -217,15 +228,15 @@ void decodeP2(u8 *out, char *file, long fileSize)
     }
 }
 
-void decodeP3(u8 *out, char *file, long fileSize)
+KEEPALIVE void decodeP3(uint8_t *out, int8_t *file, long fileSize)
 {
     int width, height;
     int maxv;
     int fi = getMetaData(file, &width, &height, &maxv, fileSize);
     int oi = 0;
     int num = 0;
-    char jumpingComment = 0;
-    char numberPushed = 0;
+    int8_t jumpingComment = 0;
+    int8_t numberPushed = 0;
     while (fi < fileSize && oi < width * height * 3)
     {
         if (file[fi] == '#')
@@ -234,7 +245,7 @@ void decodeP3(u8 *out, char *file, long fileSize)
             fi++;
             if (numberPushed)
             {
-                out[oi++] = (u8) ((float) num / (float) maxv * 255);
+                out[oi++] = (uint8_t) ((float) num / (float) maxv * 255);
                 numberPushed = 0;
             }
             continue;
@@ -246,26 +257,26 @@ void decodeP3(u8 *out, char *file, long fileSize)
             fi++;
             continue;
         }
-        if (!isdigit((u8) file[fi]))
+        if (!isdigit((uint8_t) file[fi]))
         {
             if (numberPushed)
             {
-                out[oi++] = (u8) ((float) num / (float) maxv * 255);
+                out[oi++] = (uint8_t) ((float) num / (float) maxv * 255);
                 numberPushed = 0;
             }
             fi++;
             continue;
         }
-        if (isdigit((u8) file[fi]))
+        if (isdigit((uint8_t) file[fi]))
         {
             if (!numberPushed)
             {
-                num = (u8) file[fi] - '0';
+                num = (uint8_t) file[fi] - '0';
                 numberPushed = 1;
             } else
             {
                 num *= 10;
-                num += (u8) file[fi] - '0';
+                num += (uint8_t) file[fi] - '0';
             }
             fi++;
             continue;
@@ -273,7 +284,7 @@ void decodeP3(u8 *out, char *file, long fileSize)
     }
 }
 
-void decodeP4(u8 *out, char *file, long fileSize)
+KEEPALIVE void decodeP4(uint8_t *out, int8_t *file, long fileSize)
 {
     int width, height;
     int fi = getMetaData(file, &width, &height, NULL, fileSize);
@@ -282,7 +293,7 @@ void decodeP4(u8 *out, char *file, long fileSize)
     {
         for (int b = 0; b < 8; b++)
         {
-            if (file[fi] & (u8) (0b10000000 >> b))
+            if (file[fi] & (uint8_t) (0b10000000 >> b))
             {
                 out[oi + 2 + 3 * b] = 255;
                 out[oi + 1 + 3 * b] = 255;
@@ -299,7 +310,7 @@ void decodeP4(u8 *out, char *file, long fileSize)
     if (lastBits == 0) lastBits = 8;
     for (int b = 0; b < lastBits && oi < width * height * 3; b++)
     {
-        if (file[fi] & (u8) (0b10000000 >> b))
+        if (file[fi] & (uint8_t) (0b10000000 >> b))
         {
             out[oi + 2 + 3 * b] = 255;
             out[oi + 1 + 3 * b] = 255;
@@ -313,7 +324,7 @@ void decodeP4(u8 *out, char *file, long fileSize)
     }
 }
 
-void decodeP5(u8 *out, char *file, long fileSize)
+KEEPALIVE void decodeP5(uint8_t *out, int8_t *file, long fileSize)
 {
     int width, height;
     int maxv;
@@ -321,14 +332,14 @@ void decodeP5(u8 *out, char *file, long fileSize)
     int oi = 0;
     for (fi++; fi < fileSize && oi < width * height * 3; fi++, oi += 3)
     {
-        u8 pixVal = (u8) ((float) file[fi] / maxv * 255);
+        uint8_t pixVal = (uint8_t) ((float) file[fi] / maxv * 255);
         out[oi] = pixVal;
         out[oi + 1] = pixVal;
         out[oi + 2] = pixVal;
     }
 }
 
-void decodeP6(u8 *out, char *file, long fileSize)
+KEEPALIVE void decodeP6(uint8_t *out, int8_t *file, long fileSize)
 {
     int width, height;
     int maxv;
@@ -336,9 +347,11 @@ void decodeP6(u8 *out, char *file, long fileSize)
     int oi = 0;
     for (fi++; fi < fileSize && oi < width * height * 3; fi++, oi++)
     {
-        out[oi] = (u8) ((float) file[fi] / maxv * 255);
+        out[oi] = (uint8_t) ((float) file[fi] / maxv * 255);
     }
 }
+
+#ifndef __EMSCRIPTEN__
 
 long getFileSize(FILE *pf)
 {
@@ -349,15 +362,19 @@ long getFileSize(FILE *pf)
     return fileSize;
 }
 
-void decode(char *fileBuf, u8 *out, long fileSize)
+#endif
+
+KEEPALIVE void decode(int8_t *fileBuf, uint8_t *out, long fileSize)
 {
-    static const void (*decoders[6])(u8 *, char *, long) = {
+    static void (*decoders[6])(uint8_t *, int8_t *, long) = {
             decodeP1, decodeP2, decodeP3, decodeP4, decodeP5, decodeP6
     };
-    decoders[fileType - 1](out, fileBuf, fileSize);
+    decoders[getPnmType(fileBuf) - 1](out, fileBuf, fileSize);
 }
 
-int main(int argc, char *argv[])
+#ifndef __EMSCRIPTEN__
+
+int uiMain(int argc, char *argv[])
 {
     if (argc == 1)
     {
@@ -373,7 +390,7 @@ int main(int argc, char *argv[])
 
     // read file to buffer
     long fileSize = getFileSize(pFile);
-    char *fileBuf = (char *) malloc(fileSize + 1);
+    int8_t *fileBuf = (int8_t *) malloc(fileSize + 1);
     if (fileBuf == NULL)
     {
         return 1;
@@ -393,7 +410,7 @@ int main(int argc, char *argv[])
 
     // decode
     long imgSize = width * height * 3;
-    u8 *out = (u8 *) malloc(imgSize);
+    uint8_t *out = (uint8_t *) malloc(imgSize);
     if (out == NULL)
     {
         return 1;
@@ -412,7 +429,7 @@ int main(int argc, char *argv[])
             SDL_WINDOW_SHOWN);
 
     SDL_Surface *surface = SDL_GetWindowSurface(window);
-    u8 *surfaceBuf = (u8 *) surface->pixels;
+    uint8_t *surfaceBuf = (uint8_t *) surface->pixels;
     SDL_LockSurface(surface);
     for (int i = 0; i < width * height; ++i)
     {
@@ -422,7 +439,7 @@ int main(int argc, char *argv[])
     }
     SDL_UnlockSurface(surface);
     SDL_UpdateWindowSurface(window);
-    char quit = 0;
+    int8_t quit = 0;
     while (!quit)
     {
         SDL_Event e;
@@ -445,4 +462,44 @@ int main(int argc, char *argv[])
     free(out);
 
     return 0;
+}
+#else
+KEEPALIVE void pnmDecode(int file, int out, int fileSize)
+{
+    int8_t *pFile = (int8_t*) file;
+    uint8_t *pOut = (uint8_t*) out;
+    int width, height;
+    getMetaData(pFile, &width, &height, NULL, fileSize);
+    decode(pFile, pOut, fileSize);
+    for (int i = width * height - 1; i >= 0; i--)
+    {
+        pOut[i * 4 + 3] = 255;
+        pOut[i * 4 + 2] = pOut[i * 3 + 2];
+        pOut[i * 4 + 1] = pOut[i * 3 + 1];
+        pOut[i * 4] = pOut[i * 3];
+    }
+}
+
+KEEPALIVE int getWidth(int file, int fileSize)
+{
+    int width, height;
+    getMetaData((int8_t *)file, &width, &height, NULL, fileSize);
+    return width;
+}
+
+KEEPALIVE int getHeight(int file, int fileSize)
+{
+    int width, height;
+    getMetaData((int8_t *)file, &width, &height, NULL, fileSize);
+    return height;
+}
+#endif
+
+int main(int argc, char *argv[])
+{
+#ifndef __EMSCRIPTEN__
+    return uiMain(argc, argv);
+#else
+    return 0;
+#endif
 }
