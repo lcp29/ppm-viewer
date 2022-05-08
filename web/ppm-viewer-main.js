@@ -34,20 +34,24 @@ $(document).ready(() => {
 
             let displayWidth = imgWidth
             let displayHeight = imgHeight
-            if (displayWidth <= 200 && displayWidth >= displayHeight) {
-                displayWidth = 200 / displayHeight * displayWidth
-                displayHeight = 200
-            } else if (displayHeight <= 200 && displayWidth < displayHeight) {
-                displayHeight = 200 / displayWidth * displayHeight
-                displayWidth = 200
+            if (displayWidth <= 300 && displayHeight <= 300) {
+                if (displayWidth <= displayHeight) {
+                    displayWidth = 300 / displayHeight * displayWidth
+                    displayHeight = 300
+                } else {
+                    displayHeight = 300 / displayWidth * displayHeight
+                    displayWidth = 300
+                }
             }
 
-            if (displayWidth >= 1000 && displayWidth <= displayHeight) {
-                displayWidth = 1000 / displayHeight * displayWidth
-                displayHeight = 1000
-            } else if (displayHeight >= 1000 && displayWidth >= displayHeight) {
-                displayHeight = 1000 / displayWidth * displayHeight
-                displayWidth = 1000
+            if (displayWidth >= 1000 || displayHeight >= 1000) {
+                if (displayWidth >= displayHeight) {
+                    displayHeight = 1000 / displayWidth * displayHeight
+                    displayWidth = 1000
+                } else {
+                    displayWidth = 1000 / displayHeight * displayWidth
+                    displayHeight = 1000
+                }
             }
             canvas.setAttribute("width", displayWidth)
             canvas.setAttribute("height", displayHeight)
