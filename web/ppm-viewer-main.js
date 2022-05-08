@@ -9,15 +9,7 @@ $(document).ready(() => {
     canvas.setAttribute("width", "300")
     canvas.setAttribute("height", "300")
 
-    $('#pnm-canvas').on('dragover dragenter', (e) => {
-        e.stopPropagation()
-        e.preventDefault()
-    }).on('drop', (e) => {
-        e.stopPropagation()
-        e.preventDefault()
-        console.log(e.originalEvent.dataTransfer.files)
-        const files = e.originalEvent.dataTransfer.files
-        const file = files[0]
+    function showImg(file) {
         const fileReader = new FileReader()
         fileReader.readAsArrayBuffer(file)
         fileReader.onload = (e) => {
@@ -62,5 +54,24 @@ $(document).ready(() => {
             canvas.getContext('2d').drawImage(renderer, 0, 0, displayWidth, displayHeight)
             document.getElementById("pnm-file-info").innerText = "width: " + imgWidth + " height: " + imgHeight
         }
+    }
+
+    let fileButton = document.getElementById('pnm-choose-file')
+    fileButton.addEventListener('change', () => {
+        if (fileButton.value) {
+            showImg(fileButton.files[0])
+        }
+    })
+
+    $('#pnm-canvas').on('dragover dragenter', (e) => {
+        e.stopPropagation()
+        e.preventDefault()
+    }).on('drop', (e) => {
+        e.stopPropagation()
+        e.preventDefault()
+        console.log(e.originalEvent.dataTransfer.files)
+        const files = e.originalEvent.dataTransfer.files
+        const file = files[0]
+        showImg(file)
     })
 })
