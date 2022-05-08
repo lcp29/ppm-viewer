@@ -16,4 +16,4 @@ ppm-viewer <FILE>
 
 ###### WASM版
 
-参考web目录里的示例。
+参考web目录里的示例。<a href="https://gadgets.fomal.host/ppm-viewer/">Demo</a>

@@ -35,11 +35,31 @@ $(document).ready(() => {
             Module._free(rawImgPtr)
             const img = new ImageData(pixels, imgWidth, imgHeight)
             console.log(img)
+            var renderer = document.createElement('canvas')
+            renderer.width = imgWidth
+            renderer.height = imgHeight
+            renderer.getContext('2d').putImageData(img, 0, 0)
+
             let displayWidth = imgWidth
             let displayHeight = imgHeight
+            if (displayWidth <= 200 && displayWidth >= displayHeight) {
+                displayWidth = 200 / displayHeight * displayWidth
+                displayHeight = 200
+            } else if (displayHeight <= 200 && displayWidth < displayHeight) {
+                displayHeight = 200 / displayWidth * displayHeight
+                displayWidth = 200
+            }
+
+            if (displayWidth >= 1000 && displayWidth <= displayHeight) {
+                displayWidth = 1000 / displayHeight * displayWidth
+                displayHeight = 1000
+            } else if (displayHeight >= 1000 && displayWidth >= displayHeight) {
+                displayHeight = 1000 / displayWidth * displayHeight
+                displayWidth = 1000
+            }
             canvas.setAttribute("width", displayWidth)
             canvas.setAttribute("height", displayHeight)
-            canvas.getContext('2d').putImageData(img, 0, 0)
+            canvas.getContext('2d').drawImage(renderer, 0, 0, displayWidth, displayHeight)
             document.getElementById("pnm-file-info").innerText = "width: " + imgWidth + " height: " + imgHeight
         }
     })
